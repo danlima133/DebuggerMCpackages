@@ -1,2 +1,6 @@
+# -- dev -- 
 env
 .vscode
+
+# -- build output --
+out
