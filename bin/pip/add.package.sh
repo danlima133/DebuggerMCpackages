@@ -1,0 +1,1 @@
+pip install $1 && pip freeze > temp.txt && sort -u temp.txt > requirements.txt && rm temp.txt
