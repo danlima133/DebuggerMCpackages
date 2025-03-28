@@ -4,7 +4,7 @@ import sys
 def run_as_build():
     return getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS")
 
-def get_path_valid(path):
+def get_safe_path(path):
     if run_as_build():
         return os.path.join(APP_ROOT, path)
     return path

@@ -1,8 +1,8 @@
 import configparser
 
-from utils.runtime import get_path_valid
+from utils.runtime import get_safe_path
 
-CONFIG_PATH = get_path_valid("./config.ini")
+CONFIG_PATH = get_safe_path("./config.ini")
 
 _config = configparser.ConfigParser()
 _config.read(CONFIG_PATH)

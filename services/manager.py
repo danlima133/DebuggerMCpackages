@@ -2,7 +2,7 @@ import modules.load_service_info as load_service_info
 import utils.runtime as runtime
 from pathlib import Path
 
-SERVICES = runtime.get_path_valid("services/")
+SERVICES = runtime.get_safe_path("services/")
 
 def get_service(service_id):
     path = Path(SERVICES + service_id)
@@ -20,7 +20,7 @@ def get_all_services():
     services = []
     for file in path.iterdir():
         if file.is_dir():
-            service_id = str(file).replace("services/", "")
+            service_id = str(file).replace(SERVICES, "")
             service_info = get_service(service_id)
             if type(service_info) is load_service_info.ServiceInfo:
                 services.append(service_info)

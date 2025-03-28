@@ -6,7 +6,11 @@ a = Analysis(
     ['app.py'],
     pathex=['/home/daniel/projects/python/debuggerMCpackages'],
     binaries=[],
-    datas=[("config.ini", "root/"), ("services/platformtools/service.info.json", "root/services/platformtools/")],
+    datas=[
+        ("config.ini", "root/"),
+        ("services/platformtools/service.info.json", "root/services/platformtools/"),
+        ("services/platformtools/service.config.json", "root/services/platformtools/")
+    ],
     hiddenimports=[],
     hookspath=[],
     runtime_hooks=[],
