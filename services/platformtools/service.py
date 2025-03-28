@@ -5,7 +5,8 @@ import zipfile
 from pathlib import Path
 from tqdm import tqdm
 from modules.app_config import get_prop, has_prop, set_prop
-from utils.runtime import ROOT
+from modules.json_config import JsonConfig
+from utils.runtime import ROOT, get_safe_path
 
 SECTION = "services"
 KEY_PATH = "platformtools.path"
@@ -15,6 +16,10 @@ URL_PLATFORM_TOOLS = "https://dl.google.com/android/repository/platform-tools-la
 TEMP_DIR = "temp"
 DEST_PATH = f"{TEMP_DIR}/platform_tools.zip"
 OUT_PATH = ROOT
+
+CONFIG_PATH = get_safe_path("services/platformtools/service.config.json")
+
+service_config = JsonConfig(CONFIG_PATH)
 
 def _has_platform_tools_by_venv(venv):
     return venv in os.environ
@@ -35,13 +40,14 @@ def _download_platform_tools():
     file_size = 0
     response = requests.get(url, stream=True)
     file_size = int(response.headers.get("content-lenght", 0))
-    with open(DEST_PATH, "wb") as file, tqdm(
-        desc="Baixando",
+    progress = tqdm(
+        desc=service_config.get_attr("labels/DOWNLOAD"),
         total=file_size,
         unit="B",
         unit_scale=True,
         unit_divisor=1024
-    ) as progress: 
+    )
+    with open(DEST_PATH, "wb") as file: 
         for chunck in response.iter_content(1024):
             file.write(chunck)
             progress.update(len(chunck))
@@ -59,27 +65,15 @@ def get_platform_tools():
     _download_platform_tools()
     with zipfile.ZipFile(DEST_PATH, "r") as zip:
         files = zip.namelist()
-
-        with tqdm(
-            desc="Extraindo arquivo",
+        progress = tqdm(
+            desc=service_config.get_attr("labels/EXTRACT"),
             total=len(files)
-        ) as progress:
-            for file in files:
-                progress.update(1)
-                zip.extract(file, OUT_PATH)
+        )
+        for file in files:
+            zip.extract(file, OUT_PATH)
+            progress.update(1)
     
     path = Path(OUT_PATH + "/platform-tools")
     set_prop(SECTION, KEY_PATH, str(path))
     os.remove(DEST_PATH)
     os.rmdir(TEMP_DIR)
-    
-    # TODO: adicionar o platform-tools nas variaves de ambiente e ao path
-    # TODO: tornar compativel com windows
-    os.system(f"chmod +x {path}/adb")
-    os.system(f"{path}/adb version")
-
-if __name__ == "__main__":
-    if not has_platform_tools():
-        get_platform_tools()
-    else:
-        print("Ja instalado")
