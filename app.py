@@ -19,29 +19,25 @@
 import services.platformtools.service as platformtools
 import modules.load_service_info as service_info
 import rich.console as console
-import os
+import services.manager as manager
 import utils.runtime as runtime
+import os
 
 console_obj = console.Console()
 
 console_obj.rule("Anvaliable Services")
 
-pathservice = ""
+services = manager.get_all_services()
 
-if runtime.run_as_build():
-    pathservice = os.path.join(runtime.INTERNAL, "infos", "service.info.json")
-else:
-    pathservice = "./services/platformtools/service.info.json"
+for service in services:
+    console_obj.log(str(service))
 
-info = service_info.load_info(pathservice)
+s_platformtools = manager.get_service("platformtools")
 
-console_obj.log("Service name: " + info.name)
-console_obj.log("Service description: " + info.description)
-console_obj.log("Service Version: " + info.get_version())
-
-console_obj.rule("Verify Service")
+console_obj.rule(f"Run [green]{s_platformtools.name}[/green] - {s_platformtools.get_version()}")
 
 if not platformtools.has_platform_tools():
+    console_obj.log("Vamos instalar o platformtools para voce")
     platformtools.get_platform_tools()
 else:
     console_obj.log("[red]Já instalado!")
