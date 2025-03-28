@@ -1,26 +1,6 @@
-# import os
-# import adb.tools.adbserch as adbserch
-
-# from modules.app_config import get_prop
-# import utils.runtime as runtime
-
-# if adbserch.has_platform_tools():
-#     print("Platform tools já instalado")
-#     os.system(f"{get_prop(adbserch.SECTION, adbserch.KEY_PATH)}/adb version")
-# else:
-#     print("Platform tools não instalado, desja instalar agora?")
-#     res = input("Sim/Não: ")
-#     if res.lower() == "s" or "sim":
-#         adbserch.get_platform_tools()
-#         print("Platform tools instalado com exito")
-#     elif res.lower() == "n" or "nao" or "não":
-#         print("Platform tools não instalado")
-
 import services.platformtools.service as platformtools
-import modules.load_service_info as service_info
 import rich.console as console
 import services.manager as manager
-import utils.runtime as runtime
 import os
 
 console_obj = console.Console()
