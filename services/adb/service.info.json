@@ -1,0 +1,5 @@
+{
+    "name": "Adb",
+    "version": [0, 0, 1],
+    "description": "Manager files in mobile device with adb"
+}
