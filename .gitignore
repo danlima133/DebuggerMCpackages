@@ -11,6 +11,9 @@ platform-tools
 # -- pycache --
 utils/__pycache__
 modules/__pycache__
+modules/vfs/__pycache__
+modules/vfs/handlers/__pycache__
+modules/vfs/contracts/__pycache__
 data/__pycache__
 services/utils/__pycache__
 services/platformtools/__pycache__
