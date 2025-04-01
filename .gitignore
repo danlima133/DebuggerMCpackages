@@ -14,4 +14,7 @@ modules/__pycache__
 data/__pycache__
 services/utils/__pycache__
 services/platformtools/__pycache__
+services/adb/__pycache__
+services/adb/interfaces/__pycache__
+services/adb/contracts/__pycache__
 services/__pycache__

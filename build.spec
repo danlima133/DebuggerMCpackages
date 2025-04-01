@@ -9,7 +9,8 @@ a = Analysis(
     datas=[
         ("config.ini", "root/"),
         ("services/platformtools/service.info.json", "root/services/platformtools/"),
-        ("services/platformtools/service.config.json", "root/services/platformtools/")
+        ("services/platformtools/service.config.json", "root/services/platformtools/"),
+        ("services/adb/service.config.json", "root/services/adb/")
     ],
     hiddenimports=[],
     hookspath=[],
