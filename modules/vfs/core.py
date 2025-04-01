@@ -1,5 +1,6 @@
 from hashlib import sha256
-from modules.vfs.handlers import SyncHandler, MountHandler, SyncValidatorHandler
+from modules.vfs.handlers import FsHandler
+from modules.vfs.contracts import LocalHandler
 
 class vCore:
     
@@ -32,6 +33,12 @@ class vCore:
     
     def get_components(self):
         return tuple(self.core.values())
+    
+    def has_item(self, path):
+        return self.core.get(path, {})
+    
+    def get_component(self, path):
+        return self.core.get(path, {})
 
     def create_file(self, path, content):
         self.core[path] = {
@@ -91,10 +98,10 @@ class vCore:
         return self._operation(self.Operations.DELTED_DIR, path)
 
 class vFS:
-    def __init__(self, sync_handle, mount_handle):
+    def __init__(self, input_handler, out_handler):
+        self.input_handle: FsHandler.FsHandler = input_handler
+        self.out_handle: FsHandler.FsHandler = out_handler
         self.vcore = vCore()
-        self.sync_handle: SyncHandler.SyncHandler = sync_handle
-        self.mount_hadle: MountHandler.MountHandler = mount_handle
         self.operations = []
         self.sync_buffer = []
         self.history = []
@@ -113,15 +120,15 @@ class vFS:
     
     def reflect(self):
         call_ref = {
-            vCore.Operations.CREATED_FILE: self.sync_handle.create_file,
-            vCore.Operations.MODIFIED_FILE: self.sync_handle.modified_file,
-            vCore.Operations.MOVED_FILE: self.sync_handle.move_file,
-            vCore.Operations.RENAMED_FILE: self.sync_handle.rename_file,
-            vCore.Operations.DELTED_FILE: self.sync_handle.delete_file,
-            vCore.Operations.CREATED_DIR: self.sync_handle.create_dir,
-            vCore.Operations.MOVED_DIR: self.sync_handle.move_dir,
-            vCore.Operations.RENAMED_DIR: self.sync_handle.rename_dir,
-            vCore.Operations.DELTED_DIR: self.sync_handle.delete_dir
+            vCore.Operations.CREATED_FILE: self.out_handle.create_file,
+            vCore.Operations.MODIFIED_FILE: self.out_handle.modified_file,
+            vCore.Operations.MOVED_FILE: self.out_handle.move_file,
+            vCore.Operations.RENAMED_FILE: self.out_handle.rename_file,
+            vCore.Operations.DELTED_FILE: self.out_handle.delete_file,
+            vCore.Operations.CREATED_DIR: self.out_handle.create_dir,
+            vCore.Operations.MOVED_DIR: self.out_handle.move_dir,
+            vCore.Operations.RENAMED_DIR: self.out_handle.rename_dir,
+            vCore.Operations.DELTED_DIR: self.out_handle.delete_dir
         }
         for sync in self.sync_buffer:
             op = sync["op"]
@@ -132,17 +139,49 @@ class vFS:
 
     def mount(self):
         paths = self.vcore.get_paths()
-        components = self.vcore.get_components()
-        self.sync_handle.dellete_all()
-        for idx, path in enumerate(paths):
-            component = components[idx]
-            match component["type"]:
-                case vCore.VContentType.DIR:
-                    self.sync_handle.create_dir(path)
-                case vCore.VContentType.FILE:
-                    content = self.mount_hadle.get_file_content(path)
-                    self.sync_handle.create_file(path, content)
+        if len(paths) != 0:
+            dirs = self.out_handle.list_files()
+            for dir in dirs:
+                if self.out_handle.is_dir(dir):
+                    self.out_handle.delete_dir(dir)
+            files = self.out_handle.list_files()
+            for file in files:
+                self.out_handle.delete_file(file)
+            for item in paths:
+                if self.input_handle.is_file(item):
+                    content = self.input_handle.get_file_content(item)
+                    self.out_handle.create_file(item, content)
+                    continue
+                self.out_handle.create_dir(item)    
     
+    def mount_vfs(self):
+        files = self.input_handle.list_files()
+        for file in files:
+            if self.input_handle.is_file(file):
+                content = self.input_handle.get_file_content(file)
+                self.vcore.create_file(file, content.encode())
+                continue
+            self.vcore.create_dir(file)
+    
+    def verify_sync(self):
+        items = self.vcore.get_paths()
+        items_buffer = []
+        for item in items:
+            if not self.out_handle.is_dir(item):
+                if not self.out_handle.file_exists(item):
+                    items_buffer.append(item)
+                else:
+                    content = self.out_handle.get_file_content(item)
+                    sing = sha256(content.encode()).hexdigest()
+                    hashv = self.vcore.get_component(item)["hash"]
+                    if sing != hashv:
+                        items_buffer.append(item)
+
+            else:
+                if not self.out_handle.dir_exists(item):
+                    items_buffer.append(item)
+        return items_buffer
+
     def create_file(self, path, content):
         bytes = content.encode()
         self._add_opearation(self.vcore.create_file,
@@ -167,6 +206,11 @@ class vFS:
         self._add_opearation(self.vcore.rename_file,
                                 path,
                                 name
+                            )
+    
+    def delete_file(self, path):
+        self._add_opearation(self.vcore.delete_file,
+                                path
                             )
     
     def create_dir(self, path):
